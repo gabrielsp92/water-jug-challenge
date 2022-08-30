@@ -1,6 +1,7 @@
 import { WaterBucket } from "../../domain/entities/water-bucket"
 import { WaterExchange, Transaction } from "../../domain/use-cases/water-exchange"
 import { NoSolutionError } from "../../domain/errors/no-solution"
+import { getGcd } from "../helpers/get-gcd"
 
 export enum ActionsAllowed {
   Fill = 'Fill',
@@ -19,19 +20,16 @@ export class WaterExchangeService implements WaterExchange {
     ].sort((a, b) => a.capacity > b.capacity ? 0 : -1)
   }
 
-  private validateRules(amountWanted: number) {
+  private validateInput(amountWanted: number) {
     const [smallBucket, bigBucket] = this.buckets
+    const gcd = getGcd(smallBucket.capacity, bigBucket.capacity)
     if (
-      amountWanted < smallBucket.capacity
-      && amountWanted < smallBucket.capacity + bigBucket.capacity
-      && amountWanted % smallBucket.capacity > 0
-      && amountWanted % bigBucket.capacity > 0
-      && amountWanted % (bigBucket.capacity + smallBucket.capacity) > 0
-      && amountWanted % (bigBucket.capacity % smallBucket.capacity) != 0
-      && amountWanted !== smallBucket.capacity * 2 - bigBucket.capacity
+      bigBucket.capacity > amountWanted
+      && amountWanted % gcd === 0
     ) {
-      throw new NoSolutionError()
+      return;
     }
+    throw new NoSolutionError()
   }
 
   private commitTransaction(action: ActionsAllowed, sourceBucket: WaterBucket, targetBucket?: WaterBucket) {
@@ -67,26 +65,22 @@ export class WaterExchangeService implements WaterExchange {
   }
 
   measure(amountWanted: number) {
-    this.validateRules(amountWanted);
+    this.validateInput(amountWanted);
     this.transactions = []
     const [smallBucket, bigBucket] = this.buckets
-
     if (smallBucket.capacity === amountWanted) {
       this.commitTransaction(ActionsAllowed.Fill, smallBucket)
       return this.getSummary()
     }
-
     if (bigBucket.capacity === amountWanted) {
       this.commitTransaction(ActionsAllowed.Fill, bigBucket)
       return this.getSummary()
     }
-
     if (bigBucket.capacity + smallBucket.capacity === amountWanted) {
       this.commitTransaction(ActionsAllowed.Fill, smallBucket)
       this.commitTransaction(ActionsAllowed.Fill, bigBucket)
       return this.getSummary()
     }
-
     if (
       amountWanted % (bigBucket.capacity % smallBucket.capacity) === 0
       || amountWanted === smallBucket.capacity * 2 - bigBucket.capacity
@@ -108,21 +102,18 @@ export class WaterExchangeService implements WaterExchange {
     if (amountWantedIsCloserToBigBucketCapacity) {
       this.commitTransaction(ActionsAllowed.Fill, bigBucket)
     }
-
     while (bigBucket.currentAmount > amountWanted) {
       if (!smallBucket.isEmpty()) {
         this.commitTransaction(ActionsAllowed.Dump, smallBucket)
       }
       this.commitTransaction(ActionsAllowed.Transfer, bigBucket, smallBucket)
     }
-
     while (bigBucket.currentAmount < amountWanted) {
       if (smallBucket.isEmpty()) {
         this.commitTransaction(ActionsAllowed.Fill, smallBucket)
       }
       this.commitTransaction(ActionsAllowed.Transfer, smallBucket, bigBucket)
     }
-
     return this.getSummary()
   }
 }
