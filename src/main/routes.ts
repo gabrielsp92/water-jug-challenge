@@ -14,7 +14,6 @@ export const setupRoutes = (app) => {
     validatorMiddleware(WaterBucketChallengeSchema),
     adaptRoute(
       new WaterBucketChallengeController(),
-      WaterBucketChallengeSchema
     ))
 
   app.use('/v1', appRouter)
