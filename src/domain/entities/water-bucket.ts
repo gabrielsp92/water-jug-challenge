@@ -6,7 +6,7 @@ export class WaterBucket {
   identifier: string
 
   constructor(capacity: number, identifier: string) {
-    if (this.capacity < 0 || !Number.isInteger(capacity)) {
+    if (capacity < 0 || !Number.isInteger(capacity)) {
       throw new InvalidCapacityError()
     }
     this.identifier = identifier
