@@ -62,9 +62,7 @@ export class WaterExchangeService implements WaterExchange {
     const { transactions } = this
     const latestTransactionIndex = transactions.length - 1
     const { explanation } = transactions[latestTransactionIndex]
-
     this.transactions[latestTransactionIndex].explanation = `${explanation}. Solved`
-
     return this.transactions
   }
 
@@ -100,6 +98,7 @@ export class WaterExchangeService implements WaterExchange {
         }
         this.commitTransaction(ActionsAllowed.Transfer, smallBucket, bigBucket)
         if (bigBucket.currentAmount === amountWanted) return this.getSummary()
+        if (bigBucket.currentAmount + smallBucket.currentAmount === amountWanted) return this.getSummary()
       }
       if (amountWanted === smallBucket.currentAmount) return this.getSummary();
       this.commitTransaction(ActionsAllowed.Dump, bigBucket)
