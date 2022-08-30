@@ -1,5 +1,5 @@
 import { WaterBucket } from "../../domain/entities/water-bucket"
-import { WaterExchange, Transaction } from "../../domain/usecases/water-exchange"
+import { WaterExchange, Transaction } from "../../domain/use-cases/water-exchange"
 import { NoSolutionError } from "../../domain/errors/no-solution"
 
 export enum ActionsAllowed {
@@ -28,6 +28,7 @@ export class WaterExchangeService implements WaterExchange {
       && amountWanted % bigBucket.capacity > 0
       && amountWanted % (bigBucket.capacity + smallBucket.capacity) > 0
       && amountWanted % (bigBucket.capacity % smallBucket.capacity) != 0
+      && amountWanted !== -(bigBucket.capacity - (smallBucket.capacity * 2))
     ) {
       throw new NoSolutionError()
     }
@@ -49,7 +50,6 @@ export class WaterExchangeService implements WaterExchange {
         targetBucket?.fill(sourceBucket.pour(sourceBucket.currentAmount - leftOver))
       },
     }
-
     transactionStrategy[action]()
     this.transactions.push({
       bucketX: this.buckets[0].identifier === 'X' ? this.buckets[0].currentAmount : this.buckets[1].currentAmount,
@@ -87,7 +87,10 @@ export class WaterExchangeService implements WaterExchange {
       return this.getSummary()
     }
 
-    if (amountWanted % (bigBucket.capacity % smallBucket.capacity) === 0) {
+    if (
+      amountWanted % (bigBucket.capacity % smallBucket.capacity) === 0
+      || amountWanted === -(bigBucket.capacity - (smallBucket.capacity * 2))
+    ) {
       const rest = bigBucket.capacity % smallBucket.capacity
       while (smallBucket.capacity - smallBucket.currentAmount !== rest) {
         if (smallBucket.isEmpty()) {
@@ -96,19 +99,20 @@ export class WaterExchangeService implements WaterExchange {
         this.commitTransaction(ActionsAllowed.Transfer, smallBucket, bigBucket)
         if (bigBucket.currentAmount === amountWanted) return this.getSummary()
       }
+      if (amountWanted === smallBucket.currentAmount) return this.getSummary();
       this.commitTransaction(ActionsAllowed.Dump, bigBucket)
     }
 
     const amountWantedIsCloserToBigBucketCapacity = Math.abs(amountWanted - bigBucket.capacity) < Math.abs(amountWanted - smallBucket.capacity)
     if (amountWantedIsCloserToBigBucketCapacity) {
       this.commitTransaction(ActionsAllowed.Fill, bigBucket)
-      while (bigBucket.currentAmount > amountWanted) {
-        if (!smallBucket.isEmpty()) {
-          this.commitTransaction(ActionsAllowed.Dump, smallBucket)
-        }
-        this.commitTransaction(ActionsAllowed.Transfer, bigBucket, smallBucket)
+    }
+
+    while (bigBucket.currentAmount > amountWanted) {
+      if (!smallBucket.isEmpty()) {
+        this.commitTransaction(ActionsAllowed.Dump, smallBucket)
       }
-      return this.getSummary()
+      this.commitTransaction(ActionsAllowed.Transfer, bigBucket, smallBucket)
     }
 
     while (bigBucket.currentAmount < amountWanted) {
@@ -117,7 +121,6 @@ export class WaterExchangeService implements WaterExchange {
       }
       this.commitTransaction(ActionsAllowed.Transfer, smallBucket, bigBucket)
     }
-
     return this.getSummary()
   }
 }

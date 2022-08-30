@@ -164,4 +164,34 @@ describe('WaterExchangeService', () => {
       expect(err).toBeInstanceOf(NoSolutionError)
     }
   })
+
+  it('get the measurement asked if the amountWanted equals to x * 2 - y', () => {
+    const bucketXCapacity = 3
+    const bucketYCapacity = 5
+    const sut = new WaterExchangeService(bucketXCapacity, bucketYCapacity);
+    const amountWanted = 1
+    const result = sut.measure(amountWanted)
+    expect(result).toEqual([
+      {
+        bucketX: 3,
+        bucketY: 0,
+        explanation: 'Fill bucket X'
+      },
+      {
+        bucketX: 0,
+        bucketY: 3,
+        explanation: 'Transfer bucket X to bucket Y'
+      },
+      {
+        bucketX: 3,
+        bucketY: 3,
+        explanation: 'Fill bucket X'
+      },
+      {
+        bucketX: 1,
+        bucketY: 5,
+        explanation: 'Transfer bucket X to bucket Y. Solved'
+      },
+    ])
+  })
 })
