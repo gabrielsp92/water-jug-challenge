@@ -28,7 +28,7 @@ export class WaterExchangeService implements WaterExchange {
       && amountWanted % bigBucket.capacity > 0
       && amountWanted % (bigBucket.capacity + smallBucket.capacity) > 0
       && amountWanted % (bigBucket.capacity % smallBucket.capacity) != 0
-      && amountWanted !== -(bigBucket.capacity - (smallBucket.capacity * 2))
+      && amountWanted !== smallBucket.capacity * 2 - bigBucket.capacity
     ) {
       throw new NoSolutionError()
     }
@@ -77,10 +77,12 @@ export class WaterExchangeService implements WaterExchange {
       this.commitTransaction(ActionsAllowed.Fill, smallBucket)
       return this.getSummary()
     }
+
     if (bigBucket.capacity === amountWanted) {
       this.commitTransaction(ActionsAllowed.Fill, bigBucket)
       return this.getSummary()
     }
+
     if (bigBucket.capacity + smallBucket.capacity === amountWanted) {
       this.commitTransaction(ActionsAllowed.Fill, smallBucket)
       this.commitTransaction(ActionsAllowed.Fill, bigBucket)
@@ -89,7 +91,7 @@ export class WaterExchangeService implements WaterExchange {
 
     if (
       amountWanted % (bigBucket.capacity % smallBucket.capacity) === 0
-      || amountWanted === -(bigBucket.capacity - (smallBucket.capacity * 2))
+      || amountWanted === smallBucket.capacity * 2 - bigBucket.capacity
     ) {
       const rest = bigBucket.capacity % smallBucket.capacity
       while (smallBucket.capacity - smallBucket.currentAmount !== rest) {
@@ -121,6 +123,7 @@ export class WaterExchangeService implements WaterExchange {
       }
       this.commitTransaction(ActionsAllowed.Transfer, smallBucket, bigBucket)
     }
+
     return this.getSummary()
   }
 }
