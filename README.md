@@ -35,3 +35,13 @@ declare a new value as shown in the example bellow
 # Api Docs
 
 after running the server, you can check the openApi specifications at <_localhost_>/api/docs
+
+### <b>POST: <_localhost_>/v1/water-bucket-challenge </b>
+### Request Body:
+```json
+{
+	"bucketX": 3, // bucket x capacity
+	"bucketY": 5, // bucket y capacity
+	"amountWantedZ": 4 // amount to be measured
+}
+```
