@@ -11,7 +11,7 @@ This project was created for the Water Bucket Riddle challenge.
 # Set up
 ## Environment variables
 By default the server will start at port 5000, to overwrite this setting, you can 
-declare a new value as the example bellow
+declare a new value as shown in the example bellow
 ```bash
   EXPORT PORT=<PORT>
 ```
