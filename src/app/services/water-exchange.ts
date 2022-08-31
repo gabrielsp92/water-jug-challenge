@@ -24,7 +24,7 @@ export class WaterExchangeService implements WaterExchange {
     const [smallBucket, bigBucket] = this.buckets
     const gcd = getGcd(smallBucket.capacity, bigBucket.capacity)
     if (
-      bigBucket.capacity > amountWanted
+      bigBucket.capacity >= amountWanted
       && amountWanted % gcd === 0
     ) {
       return;
@@ -66,21 +66,9 @@ export class WaterExchangeService implements WaterExchange {
 
   measure(amountWanted: number) {
     this.validateInput(amountWanted);
-    this.transactions = []
     const [smallBucket, bigBucket] = this.buckets
-    if (smallBucket.capacity === amountWanted) {
-      this.commitTransaction(ActionsAllowed.Fill, smallBucket)
-      return this.getSummary()
-    }
-    if (bigBucket.capacity === amountWanted) {
-      this.commitTransaction(ActionsAllowed.Fill, bigBucket)
-      return this.getSummary()
-    }
-    if (bigBucket.capacity + smallBucket.capacity === amountWanted) {
-      this.commitTransaction(ActionsAllowed.Fill, smallBucket)
-      this.commitTransaction(ActionsAllowed.Fill, bigBucket)
-      return this.getSummary()
-    }
+    this.transactions = []
+
     if (
       amountWanted % (bigBucket.capacity % smallBucket.capacity) === 0
       || amountWanted === smallBucket.capacity * 2 - bigBucket.capacity
@@ -102,16 +90,19 @@ export class WaterExchangeService implements WaterExchange {
     if (amountWantedIsCloserToBigBucketCapacity) {
       this.commitTransaction(ActionsAllowed.Fill, bigBucket)
     }
+
     while (bigBucket.currentAmount > amountWanted) {
       if (!smallBucket.isEmpty()) {
         this.commitTransaction(ActionsAllowed.Dump, smallBucket)
       }
       this.commitTransaction(ActionsAllowed.Transfer, bigBucket, smallBucket)
     }
+
     while (bigBucket.currentAmount < amountWanted) {
       if (smallBucket.isEmpty()) {
         this.commitTransaction(ActionsAllowed.Fill, smallBucket)
       }
+      if (smallBucket.currentAmount === amountWanted) return this.getSummary();
       this.commitTransaction(ActionsAllowed.Transfer, smallBucket, bigBucket)
     }
     return this.getSummary()
