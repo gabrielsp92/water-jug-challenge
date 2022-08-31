@@ -1,6 +1,6 @@
 # Water Bucket Challenge
 
-This project was created for the Water Bucket Riddle challenge.
+This project was created for solutioning the Water Bucket challenge
 
 # Technologies used
 - [Typescript](https://www.typescriptlang.org/) - strongly typed programming language that builds on JavaScript
