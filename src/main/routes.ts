@@ -8,7 +8,7 @@ import swaggerJson from './docs/swagger'
 
 export const setupRoutes = (app) => {
 
-  app.get('/health-check', (req, res) => res.status(200).send({ Message: 'Up' }))
+  app.get('/health-check', (_, res) => res.status(200).send({ Message: 'Up' }))
 
   const appRouter = Router();
 
@@ -19,8 +19,8 @@ export const setupRoutes = (app) => {
       new WaterBucketChallengeController(),
     ))
 
-  app.use('/v1', appRouter)
-
   app.use('/api-docs', swaggerUi.serve);
   app.get('/api-docs', swaggerUi.setup(swaggerJson));
+
+  app.use('/v1', appRouter)
 }

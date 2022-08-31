@@ -1,5 +1,6 @@
 import { WaterExchangeService } from "../../app/services/water-exchange";
 import { InvalidCapacityError } from "../../domain/errors/invalid-capacity";
+import { NoSolutionError } from "../../domain/errors/no-solution";
 import { Controller } from "../contracts/controller";
 import { serverError, ok, HttpRequest } from "../contracts/http";
 
@@ -21,6 +22,7 @@ export class WaterBucketChallengeController implements Controller {
     } catch (error) {
       let statusCode = 500
       if (error instanceof InvalidCapacityError) statusCode = 422
+      if (error instanceof NoSolutionError) statusCode = 422
       return serverError(error, statusCode)
     }
   }

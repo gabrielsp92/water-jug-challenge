@@ -9,7 +9,7 @@ export type HttpRequest<T = any> = {
 
 export const serverError = (error: Error, statusCode?: number): HttpResponse => ({
   status: statusCode || 500,
-  data: error.stack
+  data: error.stack || error.message
 })
 
 export const ok = (data: any): HttpResponse => ({
